@@ -108,7 +108,7 @@ type CourseSearchResponse struct {
 	ZtcEncodedImage string `json:"ztcEncodedImage"`
 }
 
-func GetCourse(subject string, courseNumber string) CourseSearchResponse {
+func GetCourse(subject string, courseNumber string) (CourseSearchResponse, error) {
 	client := &http.Client{}
 
 	data := url.Values{}
@@ -119,7 +119,7 @@ func GetCourse(subject string, courseNumber string) CourseSearchResponse {
 
 	res, err := client.Do(postReq)
 	if err != nil {
-		log.Fatalln(err)
+		return CourseSearchResponse{}, err
 	}
 
 	cookies := strings.Join(res.Header.Values("Set-Cookie"), "; ")
@@ -134,34 +134,39 @@ func GetCourse(subject string, courseNumber string) CourseSearchResponse {
 
 	req, err := http.NewRequest("GET", getUrl, nil)
 	if err != nil {
-		log.Fatalln(err)
+		return CourseSearchResponse{}, err
 	}
 
 	req.Header.Add("Cookie", cookies)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		return CourseSearchResponse{}, err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return CourseSearchResponse{}, err
 	}
 
 	var result CourseSearchResponse
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Fatalln(err)
+		return CourseSearchResponse{}, err
 	}
 
-	return result
+	return result, nil
 }
 
 func trackCourse(subject string, number string, duration time.Duration, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for range time.Tick(duration) {
-		course := GetCourse(subject, number)
+		course, err := GetCourse(subject, number)
+		if err != nil {
+			log.Println("Failed to fetch course", subject, number, "from api")
+			log.Println(err)
+			continue
+		}
 		log.Println(subject + number)
 		hasOpenSeats := false
 		for _, section := range course.Sections {
@@ -180,7 +185,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 
-	duration := 1 * time.Minute
+	duration := 10 * time.Second
 
 	go trackCourse("CS", "162", duration, &wg)
 	go trackCourse("CS", "261", duration, &wg)
