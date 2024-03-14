@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="refresh" content="30"/>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <link href="/css/output.css" rel="stylesheet"/>
+    <title>OSU Class Seat Tracker</title>
+</head>
+<body>
+<main>
+    <div class="px-4 py-12">
+        <div class="grid gap-4 lg:gap-8">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-bold tracking-tight">OSU Course Availability</h1>
+                <p class="text-gray-500 dark:text-gray-400">
+                    Check the availability of open seats in different sections for various courses.
+                </p>
+            </div>
+            {{if eq (len .) 0}}
+            No classes to track
+            {{end}}
+            {{range $key, $value := .}}
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <h2 class="text-xl font-semibold">{{$key}}</h2>
+                    <p class="text-sm leading-none">
+                        {{(index $value.Sections 0).CourseTitle}}
+                    </p>
+                </div>
+                <div class="relative max-w-6xl overflow-auto">
+                    <table class="w-full caption-bottom table-auto text-sm">
+                        <thead class="">
+                        <tr class="border-b transition-colors hover:bg-muted data-[state=selected]:bg-muted">
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[150px]">
+                                Section
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[150px]">
+                                Open Seats
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                Type
+                            </th>
+                            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                                CRN
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="[&amp;_tr:last-child]:border-0">
+                        {{range $value.Sections}}
+                        <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <td class="p-4 align-middle font-semibold">{{.SequenceNumber}}</td>
+                            {{if eq .SeatsAvailable 0}}
+                            <td class="p-4 align-middle bg-red-100">{{.SeatsAvailable}}</td>
+                            {{else}}
+                            <td class="p-4 align-middle bg-green-100">{{.SeatsAvailable}}</td>
+                            {{end}}
+                            <td class="p-4 align-middle">{{.ScheduleTypeDescription}}</td>
+                            <td class="p-4 align-middle">{{.CourseReferenceNumber}}</td>
+                        </tr>
+                        {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {{end}}
+            <div class="space-y-2 max-w-6xl">
+                <h2 class="text-xl font-semibold">Add New Course</h2>
+                <form class="grid gap-4" action="/" method="get">
+                    <div class="flex flex-col space-y-2">
+                        <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="course-code"
+                        >
+                            Course Code
+                        </label>
+                        <input
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                id="course-code"
+                                name="courseCodes"
+                                placeholder="Enter the course code"
+                                type="text"
+                        />
+                    </div>
+                    <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        Add Course
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
